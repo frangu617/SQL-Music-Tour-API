@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
             autoIncrement: true
         },
-        event_name: {
+        name: {
             type: DataTypes.STRING(255),
             allowNull: false
         },
