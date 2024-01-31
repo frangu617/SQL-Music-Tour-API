@@ -8,17 +8,37 @@ const { Op } = require("sequelize");
 // FIND ALL BANDS
 bands.get('/', async (req, res) => {
     try {
-        const foundBands = await Band.findAll({
-            order: [ [ 'available_start_time', 'ASC' ] ],
+        const limit = parseInt(req.query.limit, 10) || 10; // Number of items per page
+        const page = parseInt(req.query.page, 10) || 1; // Current page number
+
+        // Using findAndCountAll to get total count and paginated rows
+        const { count, rows } = await Band.findAndCountAll({
+            limit: limit,
+            offset: (page - 1) * limit, // Skip the previous pages' items
+            order: [['name', 'ASC']], // Sorting bands by name
             where: {
-                name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` }
+                name: {
+                    [Op.like]: `%${req.query.name ? req.query.name : ''}%` // Filter by name if query param is provided
+                }
             }
-        })
-        res.status(200).json(foundBands)
+        });
+
+        const totalPages = Math.ceil(count / limit); // Calculate total pages
+
+        // Include pagination info in the response
+        res.status(200).json({
+            data: rows, // The paginated result
+            pagination: {
+                totalItems: count,
+                totalPages: totalPages,
+                currentPage: page,
+                itemsPerPage: limit
+            }
+        });
     } catch (error) {
-        res.status(500).json(error)
+        res.status(500).json(error);
     }
-})
+});
 
 
 // FIND A SPECIFIC BAND
