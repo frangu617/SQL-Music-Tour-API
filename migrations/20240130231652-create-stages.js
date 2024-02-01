@@ -1,25 +1,20 @@
-'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
+'use strict'
 module.exports = {
-  async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('stage', {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('stages', {
       stage_id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
+        allowNull: false,
         autoIncrement: true,
-        allowNull: false
+        primaryKey: true,
+        type: Sequelize.INTEGER
       },
       stage_name: {
-        type: Sequelize.STRING(255),
-        allowNull: false
+        type: Sequelize.STRING,
+        allowNull: false,
       }
-      // No need to add timestamps as your model specifies timestamps: false
-    });
+    })
   },
-
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('stage');
-
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('stages')
   }
-};
+}

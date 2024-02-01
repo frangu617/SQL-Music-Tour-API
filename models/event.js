@@ -1,37 +1,64 @@
 'use strict';
 const {
-    Model
+  Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-    // Event Model
-    class Event extends Model { }
-    Event.init({
-        event_id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true
-        },
-        name: {
-            type: DataTypes.STRING(255),
-            allowNull: false
-        },
-        date: {
-            type: DataTypes.DATEONLY,
-            allowNull: false
-        },
-        start_time: {
-            type: DataTypes.TIME,
-            allowNull: false
-        },
-        end_time: {
-            type: DataTypes.TIME,
-            allowNull: false
-        }
-    }, {
-        sequelize,
-        modelName: 'Event',
-        tableName: 'event',
-        timestamps: false
-    });
-    return Event
-}
+  class Event extends Model {
+    /**
+          * Helper method for defining associations.
+          * This method is not a part of Sequelize lifecycle.
+          * The `models/index` file will call this method automatically.
+          */
+    static associate({ Stage, StageEvents, MeetGreet, SetTime }) {
+      // stages
+      Event.belongsToMany(Stage, {
+        foreignKey: "event_id",
+        as: "stages",
+        through: StageEvents
+      })
+
+      // meet and greets 
+      Event.hasMany(MeetGreet, {
+        foreignKey: "event_id",
+        as: "meet_greets",
+
+      })
+
+      // set times 
+      Event.hasMany(SetTime, {
+        foreignKey: "event_id",
+        as: "set_times",
+
+      })
+    }
+  }
+  Event.init({
+    event_id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false
+    },
+    start_time: {
+      type: DataTypes.TIME,
+      allowNull: false
+    },
+    end_time: {
+      type: DataTypes.TIME,
+      allowNull: false
+    }
+  }, {
+    sequelize,
+    modelName: 'Event',
+    tableName: 'events',
+    timestamps: false
+  });
+  return Event
+};

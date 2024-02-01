@@ -1,7 +1,7 @@
 //DEPENDENCIES
 const bands = require('express').Router();
 const db = require('../models');
-const {Band} = db;
+const {Band, MeetGreet, Event, SetTime} = db;
 const { Op } = require("sequelize");
 
 
@@ -20,14 +20,28 @@ bands.get('/', async (req, res) => {
                 name: {
                     [Op.like]: `%${req.query.name ? req.query.name : ''}%` // Filter by name if query param is provided
                 }
-            }
+            },
+            include: [{
+                model: MeetGreet,
+                as: 'meet_greets',
+                include: [{
+                    model: Event,
+                    as: 'event',
+                    where: {
+                        name: {
+                            [Op.like]: `%${req.query.name ? req.query.name : ''}%` // Filter by name if query param is provided
+                        }
+                    }
+                }]
+            },
+        { model: SetTime, as: 'set_times', include: [{ model: Event, as: 'event', where: { name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` } }}]}] // Include MeetGreet data
         });
 
         const totalPages = Math.ceil(count / limit); // Calculate total pages
 
         // Include pagination info in the response
         res.status(200).json({
-            data: rows, // The paginated result
+            data: rows, // The paginated result with MeetGreet data
             pagination: {
                 totalItems: count,
                 totalPages: totalPages,
@@ -36,16 +50,25 @@ bands.get('/', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error(error); // Log the error for debugging purposes
         res.status(500).json(error);
     }
 });
 
 
 // FIND A SPECIFIC BAND
-bands.get('/:id', async (req, res) => {
+bands.get('/:name', async (req, res) => {
     try {
         const foundBand = await Band.findOne({
-            where: { band_id: req.params.id }
+            where: { name: req.params.name },
+            include: [{
+                model: MeetGreet,
+                as: 'meet_greets',
+                include: [{
+                    model: Event,
+                    as: 'event'
+                }]
+            }]
         })
         res.status(200).json(foundBand)
     } catch (error) {
