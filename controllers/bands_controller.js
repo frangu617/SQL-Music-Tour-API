@@ -1,80 +1,62 @@
-//DEPENDENCIES
-const bands = require('express').Router();
-const db = require('../models');
-const {Band, MeetGreet, Event, SetTime} = db;
-const { Op } = require("sequelize");
-
+// DEPENDENCIES
+const bands = require('express').Router()
+const db = require('../models')
+const { Band, MeetGreet, SetTime, Event } = db 
+const { Op } = require('sequelize')
 
 // FIND ALL BANDS
 bands.get('/', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit, 10) || 10; // Number of items per page
-        const page = parseInt(req.query.page, 10) || 1; // Current page number
-
-        // Using findAndCountAll to get total count and paginated rows
-        const { count, rows } = await Band.findAndCountAll({
-            limit: limit,
-            offset: (page - 1) * limit, // Skip the previous pages' items
-            order: [['name', 'ASC']], // Sorting bands by name
+        const foundBands = await Band.findAll({
+            order: [ [ 'available_start_time', 'ASC' ] ],
             where: {
-                name: {
-                    [Op.like]: `%${req.query.name ? req.query.name : ''}%` // Filter by name if query param is provided
-                }
-            },
-            include: [{
-                model: MeetGreet,
-                as: 'meet_greets',
-                include: [{
-                    model: Event,
-                    as: 'event',
-                    where: {
-                        name: {
-                            [Op.like]: `%${req.query.name ? req.query.name : ''}%` // Filter by name if query param is provided
-                        }
-                    }
-                }]
-            },
-        { model: SetTime, as: 'set_times', include: [{ model: Event, as: 'event', where: { name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` } }}]}] // Include MeetGreet data
-        });
-
-        const totalPages = Math.ceil(count / limit); // Calculate total pages
-
-        // Include pagination info in the response
-        res.status(200).json({
-            data: rows, // The paginated result with MeetGreet data
-            pagination: {
-                totalItems: count,
-                totalPages: totalPages,
-                currentPage: page,
-                itemsPerPage: limit
+                name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` }
             }
-        });
+        })
+        res.status(200).json(foundBands)
     } catch (error) {
-        console.error(error); // Log the error for debugging purposes
-        res.status(500).json(error);
+        res.status(500).json(error)
     }
-});
-
+})
 
 // FIND A SPECIFIC BAND
 bands.get('/:name', async (req, res) => {
     try {
         const foundBand = await Band.findOne({
             where: { name: req.params.name },
-            include: [{
-                model: MeetGreet,
-                as: 'meet_greets',
-                include: [{
-                    model: Event,
-                    as: 'event'
-                }]
-            }]
+            include: [
+                { 
+                    model: MeetGreet, 
+                    as: "meet_greets", 
+                    attributes: { exclude: ["band_id", "event_id"] },
+                    include: { 
+                        model: Event, 
+                        as: "event", 
+                        where: { name: { [Op.like]: `%${req.query.event ? req.query.event : ''}%` } } 
+                    }
+                },
+                { 
+                    model: SetTime, 
+                    as: "set_times",
+                    attributes: { exclude: ["band_id", "event_id"] },
+                    include: { 
+                        model: Event, 
+                        as: "event", 
+                        where: { name: { [Op.like]: `%${req.query.event ? req.query.event : ''}%` } } 
+                    }
+                }
+            ],
+            order: [
+                [{ model: MeetGreet, as: "meet_greets" }, { model: Event, as: "event" }, 'date', 'DESC'],
+                [{ model: SetTime, as: "set_times" }, { model: Event, as: "event" }, 'date', 'DESC']
+            ]
         })
         res.status(200).json(foundBand)
     } catch (error) {
         res.status(500).json(error)
     }
 })
+
 // CREATE A BAND
 bands.post('/', async (req, res) => {
     try {
@@ -120,8 +102,5 @@ bands.delete('/:id', async (req, res) => {
     }
 })
 
-
-//EXPORT
-module.exports = bands;
-
-
+// EXPORT
+module.exports = bands

@@ -5,34 +5,34 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.bulkInsert('stages', [
       {
-        stage_name: 'Main Stage'
+        stage_name: 'MainStage'
       },
       {
-        stage_name: 'Acoustic Stage'
+        stage_name: 'AcousticStage'
       },
       {
-        stage_name: 'VIP Stage'
+        stage_name: 'VIPStage'
       },
       {
-        stage_name: 'Outdoor Stage'
+        stage_name: 'OutdoorStage'
       },
       {
-        stage_name: 'Indoor Stage'
+        stage_name: 'IndoorStage'
       },
       {
-        stage_name: 'Secondary Stage'
+        stage_name: 'SecondaryStage'
       },
       {
-        stage_name: 'Experimental Stage'
+        stage_name: 'ExperimentalStage'
       },
       {
-        stage_name: 'Electronic Stage'
+        stage_name: 'ElectronicStage'
       },
       {
-        stage_name: 'Local Talent Stage'
+        stage_name: 'LocalTalentStage'
       },
       {
-        stage_name: 'Kids Stage'
+        stage_name: 'KidsStage'
       }
     ])
   },
