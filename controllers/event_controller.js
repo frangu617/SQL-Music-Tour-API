@@ -1,17 +1,42 @@
 // DEPENDENCIES
 const events = require('express').Router()
 const db = require('../models')
-const { Event, MeetGreet, SetTime, Stage, Band } = db 
+const { Event, MeetGreet, SetTime, Stage, Band } = db
 const { Op } = require('sequelize')
 
 // FIND ALL EVENTS
 events.get('/', async (req, res) => {
     try {
         const foundEvents = await Event.findAll({
-            order: [ [ 'date', 'ASC' ] ],
+            order: [['date', 'ASC']],
             where: {
                 name: { [Op.like]: `%${req.query.name ? req.query.name : ''}%` }
-            }
+            },
+            include: [
+                {
+                    model: MeetGreet,
+                    as: "meet_greets",
+                    attributes: { exclude: ["event_id", "band_id"] },
+                    include: {
+                        model: Band,
+                        as: "band",
+                    }
+                },
+                {
+                    model: SetTime,
+                    as: "set_times",
+                    attributes: { exclude: ["event_id", "stage_id", "band_id"] },
+                    include: [
+                        { model: Band, as: "band" },
+                        { model: Stage, as: "stage" }
+                    ]
+                },
+                {
+                    model: Stage,
+                    as: "stages",
+                    through: { attributes: [] }
+                }
+            ]
         })
         res.status(200).json(foundEvents)
     } catch (error) {
@@ -25,26 +50,26 @@ events.get('/:name', async (req, res) => {
         const foundEvent = await Event.findOne({
             where: { name: req.params.name },
             include: [
-                { 
-                    model: MeetGreet, 
-                    as: "meet_greets", 
-                    attributes: { exclude: [ "event_id", "band_id" ] },
+                {
+                    model: MeetGreet,
+                    as: "meet_greets",
+                    attributes: { exclude: ["event_id", "band_id"] },
                     include: {
-                         model: Band, 
-                         as: "band", 
-                    } 
+                        model: Band,
+                        as: "band",
+                    }
                 },
-                { 
-                    model: SetTime, 
+                {
+                    model: SetTime,
                     as: "set_times",
-                    attributes: { exclude: [ "event_id", "stage_id", "band_id" ] },
+                    attributes: { exclude: ["event_id", "stage_id", "band_id"] },
                     include: [
                         { model: Band, as: "band" },
                         { model: Stage, as: "stage" }
                     ]
                 },
-                { 
-                    model: Stage, 
+                {
+                    model: Stage,
                     as: "stages",
                     through: { attributes: [] }
                 }
@@ -64,7 +89,7 @@ events.post('/', async (req, res) => {
             message: 'Successfully inserted a new event',
             data: newEvent
         })
-    } catch(err) {
+    } catch (err) {
         res.status(500).json(err)
     }
 })
@@ -80,7 +105,7 @@ events.put('/:id', async (req, res) => {
         res.status(200).json({
             message: `Successfully updated ${updatedEvents} event(s)`
         })
-    } catch(err) {
+    } catch (err) {
         res.status(500).json(err)
     }
 })
@@ -96,7 +121,7 @@ events.delete('/:id', async (req, res) => {
         res.status(200).json({
             message: `Successfully deleted ${deletedEvents} event(s)`
         })
-    } catch(err) {
+    } catch (err) {
         res.status(500).json(err)
     }
 })
